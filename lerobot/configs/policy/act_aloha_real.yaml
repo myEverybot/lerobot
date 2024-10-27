@@ -115,6 +115,7 @@ policy:
 
   # Inference.
   temporal_ensemble_momentum: null
+  temporal_ensemble_coeff: null
 
   # Training and loss computation.
   dropout: 0.1
