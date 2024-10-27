@@ -40,12 +40,14 @@ def apply_drive_mode(position, drive_mode):
 def move_until_block(arm, motor_name, positive_direction=True, while_move_hook=None):
     count = 0
     while True:
+        # proint motor name, direction, current position and goal
+        print("Motor name: ", motor_name, "Direction: ", positive_direction, "Current position: ", arm.read("Present_Position", motor_name), "Goal position: ", arm.read("Goal_Position", motor_name), "speed: ", arm.read("Present_Speed", motor_name), "current: ", arm.read("Present_Current", motor_name))
         present_pos = arm.read("Present_Position", motor_name)
         if positive_direction:
             # Move +100 steps every time. Lower the steps to lower the speed at which the arm moves.
-            arm.write("Goal_Position", present_pos + 100, motor_name)
+            arm.write("Goal_Position", present_pos + 50, motor_name)
         else:
-            arm.write("Goal_Position", present_pos - 100, motor_name)
+            arm.write("Goal_Position", present_pos - 50, motor_name)
 
         if while_move_hook is not None:
             while_move_hook()
@@ -64,9 +66,9 @@ def move_until_block(arm, motor_name, positive_direction=True, while_move_hook=N
         # print(f"{present_voltage=}")
         # print(f"{present_temperature=}")
 
-        if present_speed == 0 and present_current > 40:
+        if present_speed == 0 and present_current > 10:
             count += 1
-            if count > 100 or present_current > 300:
+            if count > 50 or present_current > 100:
                 return present_pos
         else:
             count = 0

@@ -22,14 +22,14 @@ MAX_ID_RANGE = 252
 # which corresponds to a half rotation on the left and half rotation on the right.
 # Some joints might require higher range, so we allow up to [-270, 270] degrees until
 # an error is raised.
-LOWER_BOUND_DEGREE = -270
-UPPER_BOUND_DEGREE = 270
+LOWER_BOUND_DEGREE = -280
+UPPER_BOUND_DEGREE = 280
 # For joints in percentage (i.e. joints that move linearly like the prismatic joint of a gripper),
 # their nominal range is [0, 100] %. For instance, for Aloha gripper, 0% is fully
 # closed, and 100% is fully open. To account for slight calibration issue, we allow up to
 # [-10, 110] until an error is raised.
-LOWER_BOUND_LINEAR = -10
-UPPER_BOUND_LINEAR = 110
+LOWER_BOUND_LINEAR = -40
+UPPER_BOUND_LINEAR = 140
 
 HALF_TURN_DEGREE = 180
 
