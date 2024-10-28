@@ -214,6 +214,7 @@ def record(
     force_override=False,
     display_cameras=True,
     play_sounds=True,
+    outside_exectution=False,
 ):
     # TODO(rcadene): Add option to record logs
     listener = None
@@ -221,7 +222,7 @@ def record(
     policy = None
     device = None
     use_amp = None
-
+    # print("check1")
     # Load pretrained policy
     if pretrained_policy_name_or_path is not None:
         policy, policy_fps, device, use_amp = init_policy(pretrained_policy_name_or_path, policy_overrides)
@@ -233,7 +234,7 @@ def record(
             logging.warning(
                 f"There is a mismatch between the provided fps ({fps}) and the one from policy config ({policy_fps})."
             )
-
+    # print("check2")
     # Create empty dataset or load existing saved episodes
     sanity_check_dataset_name(repo_id, policy)
     dataset = init_dataset(
@@ -246,29 +247,33 @@ def record(
         num_image_writer_processes=num_image_writer_processes,
         num_image_writer_threads=num_image_writer_threads_per_camera * robot.num_cameras,
     )
-
+    # print("check3")
     if not robot.is_connected:
         robot.connect()
-
+    # print("check4")
     listener, events = init_keyboard_listener()
-
+    print("check5")
     # Execute a few seconds without recording to:
     # 1. teleoperate the robot to move it in starting position if no policy provided,
     # 2. give times to the robot devices to connect and start synchronizing,
     # 3. place the cameras windows on screen
     enable_teleoperation = policy is None
-    # log_say("Warmup record", play_sounds)
+    if not outside_exectution:
+        log_say("Warmup record", play_sounds)
     warmup_record(robot, events, enable_teleoperation, warmup_time_s, display_cameras, fps)
-
+    # print("check6")
     if has_method(robot, "teleop_safety_stop"):
         robot.teleop_safety_stop()
-
+    # print("check7")
     while True:
+        # print("check8")
+        print (dataset["num_episodes"])
         if dataset["num_episodes"] >= num_episodes:
             break
 
         episode_index = dataset["num_episodes"]
-        # log_say(f"Recording episode {episode_index}", play_sounds)
+        if not outside_exectution:
+            log_say(f"Recording episode {episode_index}", play_sounds)
         record_episode(
             dataset=dataset,
             robot=robot,
@@ -288,23 +293,27 @@ def record(
         if not events["stop_recording"] and (
             (episode_index < num_episodes - 1) or events["rerecord_episode"]
         ):
-            log_say("Reset the environment", play_sounds)
+            if not outside_exectution:
+                log_say("Reset the environment", play_sounds)
             reset_environment(robot, events, reset_time_s)
 
         if events["rerecord_episode"]:
-            log_say("Re-record episode", play_sounds)
+            if not outside_exectution:
+                log_say("Re-record episode", play_sounds)
             events["rerecord_episode"] = False
             events["exit_early"] = False
             delete_current_episode(dataset)
             continue
 
         # Increment by one dataset["current_episode_index"]
+        # if not outside_exectution:
         save_current_episode(dataset)
 
         if events["stop_recording"]:
             break
-
-    log_say("Stop recording", play_sounds, blocking=True)
+    
+    if not outside_exectution:
+        log_say("Stop recording", play_sounds, blocking=True)
     stop_recording(robot, listener, display_cameras)
     run_compute_stats = 0
     # lerobot_dataset = create_lerobot_dataset(dataset, run_compute_stats, push_to_hub, tags, play_sounds)
@@ -478,6 +487,12 @@ if __name__ == "__main__":
         type=str,
         nargs="*",
         help="Any key=value arguments to override config values (use dots for.nested=overrides)",
+    )
+    parser_record.add_argument(
+        "--outside_exectution",
+        type=bool,
+        default=False,
+        help="Set to true, if the script is used within a outside proccess.",
     )
 
     parser_replay = subparsers.add_parser("replay", parents=[base_parser])
